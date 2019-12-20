@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="vue.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        table, tr, td {
+            border-collapse: collapse;
+        }
+        td {
+            width: 20px;
+            height: 20px;
+        }
+        .wall {
+            /* background-color: #222; */
+            background: url('brick.jpg');
+            background-size: cover;
+        }
+        .monster {
+            /* background-color: hsl(0, 100%, 40%); */
+            background-image: url("enemy.jpg");
+            background-size: cover;
+        }
+        .exit {
+            /* background-color: hsl(120, 100%, 40%); */
+            background-image: url("castledoors.png");
+            background-size: cover;
+            background-position-y: 75%;
+        }
+        .item {
+            /* background-color: hsl(240, 100%, 40%); */
+            background-image: url("chest2.png");
+            background-size: cover;
+        }
+        .player {
+            /* background-color: hsl(240, 100%, 80%); */
+            background-image: url('hero.jpg');
+            background-size: cover;
+            /*background-position-y: -150px;*/
+            /*background-position-x: -50px; */
+        }
+    </style>
+</head>
+<body>
+    <!-- movimentação do teclado e direções -->
+    <div id="game" tabindex="0"
+    v-on:keydown.arrow-right="move(1, 0)"
+    v-on:keydown.arrow-left="move(-1, 0)"
+    v-on:keydown.arrow-up="move(0, -1)"
+    v-on:keydown.arrow-down="move(0, 1)"
+    >
+    <table v-bind:key="time">
+        <p style="text-align: center; font-size: 20px;">HP:{{ hp }} | XP:{{ xp }} | Chave: {{ haveKey }}</p> 
+        <tr v-for="row in world">
+            <td v-for="tile in row" v-bind:class="getClass(tile)"></td>
+        </tr>
+    </table>
+</div>
+<script>
+    // constantes de largura e altura do mundo
+    const w = 75;
+    const h = 30;
+    // utilizando o vue e usando elementos como objeto
+    let game = new Vue({
+        el: '#game',
+        data: {
+            world: [],
+            player: [1, 1],
+            hp: 5,
+            xp: 0,
+            time: 0,
+            haveKey: false
+        },  
+        // gerador de mapa no array
+        mounted: function() {
+            this.world = this.generate();
+            console.log(this.world.map(col => col.join('')).join('\n'))
+            this.$el.focus()
+        },
+        methods: {
+            // método de criação de paredes no array 
+            generate() {
+                let world = []
+                for (let i = 0; i < h; i++) {
+                    world.push([])
+                    for (j = 0; j < w; j++) {
+                        world[i].push('#')
+                    }
+                }
+
+                    // let x = Math.round(Math.random() * w)
+                    // let y = Math.round(Math.random() * h)
+                    let x = y = 1
+
+                    let dig = (x, y, xdir, ydir, v) => {
+                        // console.log(x, y, xdir, ydir, v)
+                        world[x][y] = ' ';
+                        for (let i = 0; i < v; i++) {
+                            world[x + (xdir*i)][y + (ydir*i)] = ' '
+                        }
+                    }
+                    let xdir = ydir = v = 0
+                    for (let i = 0; i < (w * h * 0.05); i++) {
+                        if ((Math.random() < 0.5 && xdir == 0) || ydir != 0) {
+                            ydir = 0
+                            xdir = Math.random() < 0.5 ? -1 : 1;
+                            v = xdir < 0 ?
+                            Math.round(Math.random() * (x - 2)) :
+                            Math.round(Math.random() * (h - x - 2))
+                        } else {
+                            xdir = 0
+                            ydir = Math.random() < 0.5 ? -1 : 1;
+                            v = ydir < 0 ?
+                            Math.round(Math.random() * (y - 2)) :
+                            Math.round(Math.random() * (w - y - 2))
+                        }
+                        dig(x, y, xdir, ydir, v)
+                        x += (xdir * v)
+                        y += (ydir * v)
+                    }
+
+                    world[this.player[0]][this.player[1]] = 'P';
+
+                    // método para inserir os elementos ao mapa array
+                    let addElements = (monsters, items) => {
+                        let positions = []
+                        for (let i = 0; i < h; i++) {
+                            positions.push([])
+                            for (j = 0; j < w; j++) {
+                                if (world[i][j] == ' ') {
+                                    positions[i].push([i, j])
+                                }
+                            }
+                        }
+                        // inserindo monstros
+                        positions = positions.flat();
+                        for (let i = 0; i < monsters; i++) {
+                            let pos = positions[Math.round(Math.random() * positions.length)];
+                            world[pos[0]][pos[1]] = 'X:4' /*adicionando vida ao monster*/
+                        }
+                        // inserindo baú de itens
+                        for (let i = 0; i < items; i++) {
+                            let pos = positions[Math.round(Math.random() * positions.length)];
+                            world[pos[0]][pos[1]] = 'I'
+                        }
+
+                        // let key = Math.floor(Math.random() * [this.])
+
+                        // inserindo saída 
+                        let pos = positions[Math.round(Math.random() * positions.length)];
+                        world[pos[0]][pos[1]] = 'E'
+
+                    }
+                    // colocando aleatoriamente uma determinada quantidade de elementos no mapa array
+                    addElements(5 + Math.random() * 25, 18)
+
+                    return world;
+                },
+                getClass(tile) {
+                    // switch que rotula cada elemento do mapa array
+                    switch(tile[0]) {
+                        case ' ':
+                        return 'map';
+                        case 'X':
+                        return 'monster';
+                        case 'E':
+                        return 'exit';
+                        case 'P':
+                        return 'player';
+                        case 'I':
+                        return 'item';
+                    }
+                    return 'wall';
+                },
+                //movimentação do personagem
+                move(x, y) {
+                    let movePlayer = () => {
+                        this.world[this.player[1]][this.player[0]] = ' '
+                        this.player[0] += x
+                        this.player[1] += y
+                        this.world[this.player[1]][this.player[0]] = 'P'
+                        this.time++
+                    }
+                    let nextPos = this.world[this.player[1] + y][this.player[0] + x]
+                    if(nextPos[0] == ' ') {
+                        movePlayer()
+                    } else if (nextPos[0] == 'X') {
+                        // encontrou inimigo e sessão de ataques player x monster
+                        let hatck = Math.floor(Math.random() * 3) + 1
+                        let matck = Math.floor(Math.random() * 3) + 1 + (this.xp * 2)
+                        let mhp = nextPos.split(':')[1]
+                        mhp-= hatck
+                        // se o player morrer
+                        if (this.hp <= 0) {
+                            alert("Você morreu! tente novamente.")
+                            location.reload();
+                        }
+                        // se o monstro morrer remove seu espaço no mapa e deixa área livre
+                        if (mhp <= 0) {
+                            this.world[this.player[1] + y][this.player[0] + x] = ' '
+                            this.xp++
+                            movePlayer()
+                        // ataque efetivo do monstro ao player
+                        } else {
+                            this.world[this.player[1] + y][this.player[0] + x] = `X:${mhp}`
+                            this.hp-= matck
+                        }
+                    } else if (nextPos[0] == 'I') {
+                        // encontrou baú de itens
+                        this.world[this.player[1] + y][this.player[0] + x] = ' '
+                        this.xp+=Math.floor(Math.random() * 4) + 1
+                        this.hp+=Math.floor(Math.random() * 4) + 1
+                        qtdBau = 5;
+                        n = Math.floor(Math.random() * qtdBau) + 1
+                        if (this.haveKey == true) {
+                            return
+                        } else if (n > qtdBau - 1 || qtdBau == 0 || n < 0) {
+                            this.haveKey = true
+                        } else {
+                            // chance aleatória para báu com chave dentro do mapa
+                            do{
+                               n = Math.floor(Math.random() * qtdBau - 1)
+                           } while (this.haveKey = false)
+                       }
+                       console.log(n)
+                       movePlayer()
+                   } else if (nextPos[0] == 'E') {
+                    // encontrou a saída 
+                    if (this.haveKey == true) {
+                        // se tiver a chave habilita a saída para o jogador e emite alert
+                        this.world[this.player[1] + y][this.player[0] + x] = ' '
+                        movePlayer()
+                        alert("Parabéns! você conseguiu :D")
+                        location.reload()
+                    } else {
+                        // se não encontrou a chave emite alert para retornar
+                        alert("É necessário encontrar uma chave para sair!")
+                    }
+                }
+            }
+        }
+    });
+</script>
+</body>
+</html>
