@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <script src="vue.js"></script>
+    <script src="element.js"></script>
+    <script src="world.js"></script>
+    <script src="move.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        table, tr, td {
+            border-collapse: collapse;
+        }
+        td {
+            width: 20px;
+            height: 20px;
+        }
+        .wall {
+            /* background-color: #222; */
+            background: url('brick.jpg');
+            background-size: cover;
+        }
+        .monster {
+            /* background-color: hsl(0, 100%, 40%); */
+            background-image: url("enemy.jpg");
+            background-size: cover;
+        }
+        .exit {
+            /* background-color: hsl(120, 100%, 40%); */
+            background-image: url("castledoors.png");
+            background-size: cover;
+            background-position-y: 75%;
+        }
+        .item {
+            /* background-color: hsl(240, 100%, 40%); */
+            background-image: url("chest2.png");
+            background-size: cover;
+        }
+        .player {
+            /* background-color: hsl(240, 100%, 80%); */
+            background-image: url('hero.jpg');
+            background-size: cover;
+            /*background-position-y: -150px;*/
+            /*background-position-x: -50px; */
+        }
+    </style>
+</head>
+<body>
+    <!-- movimentação do teclado e direções -->
+    <div id="game" tabindex="0"
+    v-on:keydown.arrow-right="move(1, 0)"
+    v-on:keydown.arrow-left="move(-1, 0)"
+    v-on:keydown.arrow-up="move(0, -1)"
+    v-on:keydown.arrow-down="move(0, 1)"
+    >
+    <table v-bind:key="time">
+        <p style="text-align: center; font-size: 20px;">HP:{{ hp }} | XP:{{ xp }} | Chave: {{ haveKey }}</p> 
+        <tr v-for="row in world">
+            <td v-for="tile in row" v-bind:class="getClass(tile)"></td>
+        </tr>
+    </table>
+</div>
+
+    
+
+<script src="world.js"></script>
+<script src="vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+
+</body>
+</html>
